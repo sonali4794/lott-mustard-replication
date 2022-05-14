@@ -1,6 +1,6 @@
 ---
-title: "Untitled"
-author: "Sonali"
+title: "Replication of Lott n Mustard Right to carry laws (1997)"
+author: "Sonali Mishra"
 date: "15/05/2022"
 output: pdf_document
 ---
@@ -635,4 +635,4 @@ iplot(SA_laut,sep =.5,ref.line = -1,
 
 ## Conclusion 
 
-Overall the techniques suggest the same conslusion that derived by Lott and Mustard in their original paper however the magnitudes are different and rightfully so.These improvements are very crucial in policymaking. This also goes to say that the field of economics is constantly updating and upgrading. Therefore, it might be a good practice to revisit the old conlusions drawn in papers written before especially whe the topic is still relevant. For example callaway and santana show opposit impact on property crime rate than TWFE and Bacon. So this needs hard thingking as to which one to be followed and more importantly why the difference has risen. 
+Overall the techniques suggest the same conclusion that derived by Lott and Mustard in their original paper however the magnitudes are different and rightfully so.These improvements are very crucial in policy making. This also goes to say that the field of economics is constantly updating and upgrading. Therefore, it might be a good practice to revisit the old conclusions drawn in papers written before especially whe the topic is still relevant. For example callaway and santana show opposite impact on property crime rate than TWFE and Bacon. So this needs hard thinking as to which one to be followed and more importantly why the difference has risen. 

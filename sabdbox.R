@@ -1,33 +1,16 @@
-library(haven)
-library(tidyverse)
-library(data.table)
-library(fixest)
-library(bacondecomp) 
-library(TwoWayFEWeights)
-library(fixest)
-library(glue)
-library(did)
+state_crime = read_dta("D:/UT/Causal Inference/Lott n Mustard/UpdatedStateLevelData-2010.csv")
 
-# rpcpi: real per capita Personal Income
-# rpcim: " " Income Maintenance
-# rpcui: " " unemployment insurance
-
-state_crime = read_dta("/Users/jonathanbowman/Desktop/Repos/Causal/LottMustard1997-Expansion/LottMustard1997-Expansion/misc/UpdatedStateLevelData-2010.dta")
-
-# filter for replication
 state_crime = state_crime %>% 
   filter(year>=1977 & year<=1992)
 
-state_crime <- state_crime %>%
+state_crime = state_crime %>%
   select(shalll, everything())
-
-# Let's create a more user-friendly indicator of which states received treatment
 
 state_crime = state_crime %>% 
   group_by(state) %>% 
   mutate(treat = ifelse(min(shalll) ==  1, 1, (ifelse(min(shalll) == max(shalll), 0, 1))))
 
-state_crime <- state_crime %>%
+state_crime = state_crime %>%
   select(treat, everything())
 
 treat_table = state_crime %>% 
@@ -37,7 +20,7 @@ treat_table = state_crime %>%
 
 state_crime = left_join(state_crime, treat_table, by = c("state" = "state")) 
 
-state_crime <- state_crime %>%
+state_crime = state_crime %>%
   select(cnt, everything())
 
 state_crime = state_crime %>% 
@@ -46,11 +29,10 @@ state_crime = state_crime %>%
 state_crime = state_crime %>% 
   mutate(time_to_treat = ifelse(treat_year == 0, 0,year - treat_year))
 
-state_crime <- state_crime %>%
+state_crime = state_crime %>%
   select(time_to_treat, everything())
 
-# muligan
-state_crime <- state_crime %>%
+state_crime = state_crime %>%
   select(year, everything()) %>% 
   select(aftr, everything()) %>% 
   select(shalll, everything()) %>% 
@@ -73,7 +55,7 @@ mod_bacon = bacon(lvio ~ shalll,
 
 #calloway santana
 
-atts <- att_gt(yname = "lvio", # LHS variable
+atts = att_gt(yname = "lvio", # LHS variable
                tname = "year", # time variable
                idname = "fipsstat", # id variable
                gname = "treat_year", # first treatment period variable
@@ -90,7 +72,7 @@ atts <- att_gt(yname = "lvio", # LHS variable
 
 #average treatment effects overt years for avg treatment effect
 
-agg_effects <- aggte(atts, type = "group", balance_e=TRUE)
+agg_effects = aggte(atts, type = "group", balance_e=TRUE)
 summary(agg_effects)
 
 
@@ -110,3 +92,80 @@ legend("bottomleft", col = c(1, 2), pch = c(20, 17),
        legend = "Sun & Abraham (2020)")
 
 summary(mod_sa)
+
+foreach(y = 1:Y) %do% {
+  # index outcome
+  yval = outcomes[y]
+  acon = acontrols[y]
+  
+  # formula for index outcome
+  sa_spec = as.formula(paste0(yval, "~ sunab(treat_year, year) + density + 
+                             rpcpi + rpcim + rpcui + rpcrpo + 
+                             ppwm1019 + ppwm2029 + ppwm3039 + 
+                             ppwm4049 + ppwm5064 + ppwf1019 + 
+                             ppwf2029 + ppwf3039 + ppwf4049 + 
+                             ppwf5064 + ppbm1019 + ppbm2029 + 
+                             ppbm3039 + ppbm4049 + ppbm5064 + 
+                             ppbf1019 + ppbf2029 + ppbf3039 + 
+                             ppbf4049 + ppbf5064 +ppnm1019 + 
+                             ppnm2029 + ppnm3039 + ppnm4049 + 
+                             ppnm5064 + ppnf1019 + ppnf1019 + 
+                             ppnf2029 + ppnf3039 + ppnf4049 + 
+                             ppnf5064 + ", acon))
+  # twfe model spec using formula
+  mod_SA = feols(fml = sa_spec, 
+                  data = state_crime,
+                  subset = ~ year < 1992,
+                  vcov = ~ fipsstat + year)
+  
+  # assign model name according to index outcome
+  
+  mod_name = paste("SA", yval, sep = "_")
+  assign(mod_name, mod_SA)
+  
+  fname_mod = paste0(mod_name, ".RDs")
+  save(file = file.path("D:/UT/Causal Inference/Lott n Mustard/output/models", fname_mod))
+  
+}
+
+par(mfrow=c(1,1))
+iplot(SA_lvio,sep =.5,ref.line = -1,
+      xlab = 'Time to treatment',
+      main = 'Event study: Staggered treatment',
+      sub = "Violent Crime")
+par(mfrow=c(1,1))
+iplot(SA_lpro,sep =.5,ref.line = -1,
+      xlab = 'Time to treatment',
+      main = 'Event study: Staggered treatment',
+      sub = "Property Crime")
+iplot(SA_lmur,sep =.5,ref.line = -1,
+      xlab = 'Time to treatment',
+      main = 'Event study: Staggered treatment',
+      sub = "Murder")
+par(mfrow=c(1,1))
+iplot(SA_lrap,sep =.5,ref.line = -1,
+      xlab = 'Time to treatment',
+      main = 'Event study: Staggered treatment',
+      sub = "Rape")
+iplot(SA_laga,sep =.5,ref.line = -1,
+      xlab = 'Time to treatment',
+      main = 'Event study: Staggered treatment',
+      sub = "Aggravated Assault")
+par(mfrow=c(1,1))
+iplot(SA_lrob,sep =.5,ref.line = -1,
+      xlab = 'Time to treatment',
+      main = 'Event study: Staggered treatment',
+      sub = "Robbery")
+iplot(SA_lbur,sep =.5,ref.line = -1,
+      xlab = 'Time to treatment',
+      main = 'Event study: Staggered treatment',
+      sub = "Burglary")
+par(mfrow=c(1,1))
+iplot(SA_llar,sep =.5,ref.line = -1,
+      xlab = 'Time to treatment',
+      main = 'Event study: Staggered treatment',
+      sub = "Larceny")
+iplot(SA_laut,sep =.5,ref.line = -1,
+      xlab = 'Time to treatment',
+      main = 'Event study: Staggered treatment',
+      sub = "Auto Theft")

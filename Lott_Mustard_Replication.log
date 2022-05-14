@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.5.9)  15 MAY 2022 04:24
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.5.9)  15 MAY 2022 04:28
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -547,14 +547,15 @@ LaTeX Font Info:    External font `lmex10' loaded for size
 (Font)              <7> on input line 155.
 LaTeX Font Info:    External font `lmex10' loaded for size
 (Font)              <5> on input line 155.
-<Lott_Mustard_Replication_files/figure-latex/unnamed-chunk-1-1.pdf, id=28, 469.755pt x 325.215pt>
+[1
+
+{c:/Users/hp/AppData/Roaming/TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
+<Lott_Mustard_Replication_files/figure-latex/unnamed-chunk-1-1.pdf, id=40, 469.755pt x 325.215pt>
 File: Lott_Mustard_Replication_files/figure-latex/unnamed-chunk-1-1.pdf Graphic file (type pdf)
 <use Lott_Mustard_Replication_files/figure-latex/unnamed-chunk-1-1.pdf>
 Package pdftex.def Info: Lott_Mustard_Replication_files/figure-latex/unnamed-chunk-1-1.pdf  used on input line 256.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[1
-
-{c:/Users/hp/AppData/Roaming/TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2
+[2
 pdfTeX warning (ext4): destination with the same identifier (name{table.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
@@ -564,69 +565,64 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.2}) has 
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
 l.260 ...ations-twfe-bacon-callaway-and-santanna}}
-                                                  
+                                                  ] [3
 pdfTeX warning (ext4): destination with the same identifier (name{table.3}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.260 ...ations-twfe-bacon-callaway-and-santanna}}
-                                                  ]
-<Lott_Mustard_Replication_files/figure-latex/unnamed-chunk-8-1.pdf, id=48, 469.755pt x 325.215pt>
+l.281 
+       <./Lott_Mustard_Replication_files/figure-latex/unnamed-chunk-1-1.pdf>]
+<Lott_Mustard_Replication_files/figure-latex/unnamed-chunk-8-1.pdf, id=58, 469.755pt x 325.215pt>
 File: Lott_Mustard_Replication_files/figure-latex/unnamed-chunk-8-1.pdf Graphic file (type pdf)
 <use Lott_Mustard_Replication_files/figure-latex/unnamed-chunk-8-1.pdf>
 Package pdftex.def Info: Lott_Mustard_Replication_files/figure-latex/unnamed-chunk-8-1.pdf  used on input line 386.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[3 <./Lott_Mustard_Replication_files/figure-latex/unnamed-chunk-1-1.pdf>] [4
+[4
 pdfTeX warning (ext4): destination with the same identifier (name{table.4}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
 l.388 \includegraphics
-                      [width=0.5\linewidth]{Lott_Mustard_Replication_files/f...
-pdfTeX warning (ext4): destination with the same identifier (name{table.5}) has been already used, duplicate ignored
-<argument> ...shipout:D \box_use:N \l_shipout_box 
-                                                  \__shipout_drop_firstpage_...
-l.388 \includegraphics
                       [width=0.5\linewidth]{Lott_Mustard_Replication_files/f...]
-<Lott_Mustard_Replication_files/figure-latex/figures-side-1.pdf, id=66, 469.755pt x 325.215pt>
+<Lott_Mustard_Replication_files/figure-latex/figures-side-1.pdf, id=65, 469.755pt x 325.215pt>
 File: Lott_Mustard_Replication_files/figure-latex/figures-side-1.pdf Graphic file (type pdf)
 <use Lott_Mustard_Replication_files/figure-latex/figures-side-1.pdf>
 Package pdftex.def Info: Lott_Mustard_Replication_files/figure-latex/figures-side-1.pdf  used on input line 388.
 (pdftex.def)             Requested size: 234.87692pt x 162.6071pt.
-<Lott_Mustard_Replication_files/figure-latex/figures-side-2.pdf, id=67, 469.755pt x 325.215pt>
+<Lott_Mustard_Replication_files/figure-latex/figures-side-2.pdf, id=66, 469.755pt x 325.215pt>
 File: Lott_Mustard_Replication_files/figure-latex/figures-side-2.pdf Graphic file (type pdf)
 <use Lott_Mustard_Replication_files/figure-latex/figures-side-2.pdf>
 Package pdftex.def Info: Lott_Mustard_Replication_files/figure-latex/figures-side-2.pdf  used on input line 389.
 (pdftex.def)             Requested size: 234.87692pt x 162.6071pt.
-<Lott_Mustard_Replication_files/figure-latex/figures-side-3.pdf, id=68, 469.755pt x 325.215pt>
+<Lott_Mustard_Replication_files/figure-latex/figures-side-3.pdf, id=67, 469.755pt x 325.215pt>
 File: Lott_Mustard_Replication_files/figure-latex/figures-side-3.pdf Graphic file (type pdf)
 <use Lott_Mustard_Replication_files/figure-latex/figures-side-3.pdf>
 Package pdftex.def Info: Lott_Mustard_Replication_files/figure-latex/figures-side-3.pdf  used on input line 390.
 (pdftex.def)             Requested size: 234.87692pt x 162.6071pt.
-<Lott_Mustard_Replication_files/figure-latex/figures-side-4.pdf, id=69, 469.755pt x 325.215pt>
+<Lott_Mustard_Replication_files/figure-latex/figures-side-4.pdf, id=68, 469.755pt x 325.215pt>
 File: Lott_Mustard_Replication_files/figure-latex/figures-side-4.pdf Graphic file (type pdf)
 <use Lott_Mustard_Replication_files/figure-latex/figures-side-4.pdf>
 Package pdftex.def Info: Lott_Mustard_Replication_files/figure-latex/figures-side-4.pdf  used on input line 391.
 (pdftex.def)             Requested size: 234.87692pt x 162.6071pt.
-<Lott_Mustard_Replication_files/figure-latex/figures-side-5.pdf, id=70, 469.755pt x 325.215pt>
+<Lott_Mustard_Replication_files/figure-latex/figures-side-5.pdf, id=69, 469.755pt x 325.215pt>
 File: Lott_Mustard_Replication_files/figure-latex/figures-side-5.pdf Graphic file (type pdf)
 <use Lott_Mustard_Replication_files/figure-latex/figures-side-5.pdf>
 Package pdftex.def Info: Lott_Mustard_Replication_files/figure-latex/figures-side-5.pdf  used on input line 392.
 (pdftex.def)             Requested size: 234.87692pt x 162.6071pt.
-<Lott_Mustard_Replication_files/figure-latex/figures-side-6.pdf, id=71, 469.755pt x 325.215pt>
+<Lott_Mustard_Replication_files/figure-latex/figures-side-6.pdf, id=70, 469.755pt x 325.215pt>
 File: Lott_Mustard_Replication_files/figure-latex/figures-side-6.pdf Graphic file (type pdf)
 <use Lott_Mustard_Replication_files/figure-latex/figures-side-6.pdf>
 Package pdftex.def Info: Lott_Mustard_Replication_files/figure-latex/figures-side-6.pdf  used on input line 393.
 (pdftex.def)             Requested size: 234.87692pt x 162.6071pt.
-<Lott_Mustard_Replication_files/figure-latex/figures-side-7.pdf, id=72, 469.755pt x 325.215pt>
+<Lott_Mustard_Replication_files/figure-latex/figures-side-7.pdf, id=71, 469.755pt x 325.215pt>
 File: Lott_Mustard_Replication_files/figure-latex/figures-side-7.pdf Graphic file (type pdf)
 <use Lott_Mustard_Replication_files/figure-latex/figures-side-7.pdf>
 Package pdftex.def Info: Lott_Mustard_Replication_files/figure-latex/figures-side-7.pdf  used on input line 394.
 (pdftex.def)             Requested size: 234.87692pt x 162.6071pt.
-<Lott_Mustard_Replication_files/figure-latex/figures-side-8.pdf, id=73, 469.755pt x 325.215pt>
+<Lott_Mustard_Replication_files/figure-latex/figures-side-8.pdf, id=72, 469.755pt x 325.215pt>
 File: Lott_Mustard_Replication_files/figure-latex/figures-side-8.pdf Graphic file (type pdf)
 <use Lott_Mustard_Replication_files/figure-latex/figures-side-8.pdf>
 Package pdftex.def Info: Lott_Mustard_Replication_files/figure-latex/figures-side-8.pdf  used on input line 395.
 (pdftex.def)             Requested size: 234.87692pt x 162.6071pt.
-<Lott_Mustard_Replication_files/figure-latex/figures-side-9.pdf, id=74, 469.755pt x 325.215pt>
+<Lott_Mustard_Replication_files/figure-latex/figures-side-9.pdf, id=73, 469.755pt x 325.215pt>
 File: Lott_Mustard_Replication_files/figure-latex/figures-side-9.pdf Graphic file (type pdf)
 <use Lott_Mustard_Replication_files/figure-latex/figures-side-9.pdf>
 Package pdftex.def Info: Lott_Mustard_Replication_files/figure-latex/figures-side-9.pdf  used on input line 396.
@@ -651,7 +647,12 @@ Overfull \hbox (2.22104pt too wide) in paragraph at lines 388--397
 [] []
  []
 
-[5 <./Lott_Mustard_Replication_files/figure-latex/unnamed-chunk-8-1.pdf> <./Lott_Mustard_Replication_files/figure-latex/figures-side-1.pdf> <./Lott_Mustard_Replication_files/figure-latex/figures-side-2.pdf>] [6 <./Lott_Mustard_Replication_files/figure-latex/figures-side-3.pdf> <./Lott_Mustard_Replication_files/figure-latex/figures-side-4.pdf> <./Lott_Mustard_Replication_files/figure-latex/figures-side-5.pdf> <./Lott_Mustard_Replication_files/figure-latex/figures-side-6.pdf> <./Lott_Mustard_Replication_files/figure-latex/figures-side-7.pdf> <./Lott_Mustard_Replication_files/figure-latex/figures-side-8.pdf>] [7 <./Lott_Mustard_Replication_files/figure-latex/figures-side-9.pdf>] (./Lott_Mustard_Replication.aux)
+[5
+pdfTeX warning (ext4): destination with the same identifier (name{table.5}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.397 
+       <./Lott_Mustard_Replication_files/figure-latex/unnamed-chunk-8-1.pdf>] [6 <./Lott_Mustard_Replication_files/figure-latex/figures-side-1.pdf> <./Lott_Mustard_Replication_files/figure-latex/figures-side-2.pdf> <./Lott_Mustard_Replication_files/figure-latex/figures-side-3.pdf> <./Lott_Mustard_Replication_files/figure-latex/figures-side-4.pdf> <./Lott_Mustard_Replication_files/figure-latex/figures-side-5.pdf> <./Lott_Mustard_Replication_files/figure-latex/figures-side-6.pdf>] [7 <./Lott_Mustard_Replication_files/figure-latex/figures-side-7.pdf> <./Lott_Mustard_Replication_files/figure-latex/figures-side-8.pdf> <./Lott_Mustard_Replication_files/figure-latex/figures-side-9.pdf>] (./Lott_Mustard_Replication.aux)
 
 LaTeX Warning: There were multiply-defined labels.
 
@@ -661,13 +662,13 @@ Package rerunfilecheck Info: File `Lott_Mustard_Replication.out' has not changed
 Here is how much of TeX's memory you used:
  12608 strings out of 480260
  203709 string characters out of 5892357
- 501657 words of memory out of 5000000
+ 496023 words of memory out of 5000000
  30264 multiletter control sequences out of 15000+600000
  505658 words of font info for 64 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 60i,9n,63p,529b,329s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 60i,9n,63p,529b,349s stack positions out of 10000i,1000n,20000p,200000b,200000s
 {c:/Users/hp/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}<c:/Users/hp/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx12.pfb><c:/Users/hp/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb><c:/Users/hp/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr12.pfb><c:/Users/hp/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr17.pfb>
-Output written on Lott_Mustard_Replication.pdf (7 pages, 186712 bytes).
+Output written on Lott_Mustard_Replication.pdf (7 pages, 192137 bytes).
 PDF statistics:
  178 PDF objects out of 1000 (max. 8388607)
  137 compressed objects within 2 object streams
