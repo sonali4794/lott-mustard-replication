@@ -1,0 +1,638 @@
+---
+title: "Untitled"
+author: "Sonali"
+date: "15/05/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, cache = TRUE)
+library(haven)
+library(tidyverse)
+library(data.table)
+library("bacondecomp") 
+library("TwoWayFEWeights")
+library(glue)
+library("did")
+library(data.table)
+library("fixest")
+library(caret)
+library(tidyverse)
+library(ggplot2)
+library("glmnet")
+library(gbm)
+library(ggmap)
+library(rpart)
+library(rpart.plot)
+library(randomForest)
+library(rsample)
+library(modelr)
+library("fastDummies")
+library(scales)
+library(here)
+library(knitr)
+library(kableExtra)
+library(doParallel)
+```
+## Abstract 
+
+This paper is a replication of Lott and Mustard 1997 paper on effects of right to carry laws on crime rates. We use state level data instead of county data used in the original paper. We perform twoway fixed effects regression. In addition we also use bacon decomposition to weight the matrices efficiently. We also use Callaway-Santanna estimator and Sun and Abraham event study in this context. Finally we see if these new additons change any conclusion made in the paper significantly. 
+
+## Overview
+
+The original paper used cross-sectional time series data for US counties over 1977-1992 to estimate crime and deaths. They conclude that right to carry laws reduce violent crimes and if the policy was implemented in 1992 then 1500 murders could have been avoided. They also report that this law would not cause increases in "accidental" deaths that is the someone killing a person who didn't mean any harm in self-defense. They go on to report various other factors such as social benefit, annual gain, other crime rates etc but we focus on just the crime volume using 4 different techniques. 
+
+When the law was introduced there were compelling argument from both ends of the spectrum that were bolstered by either anecdotes or data. The arguments basically were: a)will this lead to those citizens committing more crime who otherwise did not or b) will this be a safeguard against criminals who intended to commit some sort of crime. When cases of killing in self-defense occur, it become even more crucial to test this theory. 
+
+Bacon decomposition is a modification on TWFE as in that it introduces a more sophisticated way to weight the 2*2 matrices than TWFE. TWFE naively assumed equal matrices without accounting for the fact that changing the length of panel will change the weights and therefore change the estimates. 
+
+Callaway and Santanna also develop on a weighting mechanism. They calculate average group treatment effect. Their major success is in the fact that this is non-parametric regression. This way is agnostic of time. Parallel trends conditional on time invariant co variate are expected to overlay in a way that can be computed by the propensity score. Sun and Abraham use differential timing of the event studies to measure changes in the treatment by computing lead and lags. This is sort of like Callaway and Santanna in the sense that they also focus on group specific ATT. These techniques primarily enahnce the estimation because they take into account the heterogeneity treatment effect. 
+
+## Data Collection
+
+We collected this data from the replication kit provided by the authors. The same data set was used to publish their paper. The data is from FBI crime reports. It gives state level crime rate, crime count, arrest rate, length of the crime and many more variables. The categories of crime used for the purpose of this paper are violent crime, murder, burglary, larceny, theft, rape, robbery, assault and property crime. A key variable in the regression is "shall" which is an indicator variable identifying shall as 1 if the carry gun laws are in effect. 
+
+Below plot and tables provides a summary of the crime statistics across states over the years 1977-1992
+
+```{r}
+crime = read.csv("D:/UT/Causal Inference/Lott n Mustard/UpdatedStateLevelData-2010.csv") %>%
+  as.data.frame() %>%
+  filter(year>=1977 & year<=1992) 
+
+treatment_grp = crime %>% 
+  group_by(state) %>% 
+  summarize(tot_count = sum(shalll)) %>% 
+  na.omit()
+
+state_implementation = left_join(crime, treatment_grp, by = c("state" = "state")) 
+
+state_implementation = state_implementation %>% 
+  mutate(treatment_year = ifelse(tot_count == 16, 'before 1977', ifelse(tot_count <= 16 & tot_count > 0, 1992 - (tot_count - 1), 0))) %>%
+  mutate(pre_treatment = ifelse(treatment_year == 'before 1977',1,0))
+
+rollout = state_implementation %>%
+  distinct(state, treatment_year) %>% 
+  arrange(treatment_year)
+
+pre_treatment = rollout %>% 
+  filter(treatment_year == 'before 1977')
+
+post_treatment = rollout %>% 
+  filter(treatment_year != 'before 1977') %>% 
+  filter(treatment_year != 0)
+
+rollout_final = rbind(pre_treatment, post_treatment)
+colnames(rollout_final) = c("State", "Year")
+
+df = rollout_final %>% 
+  kbl(caption = "State-wise implementation dates of the right to carry guns law") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+df
+
+table2 = crime %>%
+  select(state, year, ratvio, ratpro, ratmur, ratrap, rataga, ratrob, rataut, ratbur, ratlar) %>%
+  filter(year >= 1977 & year <= 1992)
+
+ratvio_mean = mean(table2$ratvio)
+ratvio_sd = sd(table2$ratvio)
+ratvio_max = max(table2$ratvio)
+ratvio_min = min(table2$ratvio)
+
+ratpro_mean = mean(table2$ratpro)
+ratpro_sd = sd(table2$ratpro)
+ratpro_max = max(table2$ratpro)
+ratpro_min = min(table2$ratpro)
+
+ratmur_mean = mean(table2$ratmur)
+ratmur_sd = sd(table2$ratmur)
+ratmur_max = max(table2$ratmur)
+ratmur_min = min(table2$ratmur)
+
+ratrap_mean = mean(table2$ratrap)
+ratrap_sd = sd(table2$ratrap)
+ratrap_max = max(table2$ratrap)
+ratrap_min = min(table2$ratrap)
+
+rataga_mean = mean(table2$rataga)
+rataga_sd = sd(table2$rataga)
+rataga_max = max(table2$rataga)
+rataga_min = min(table2$rataga)
+
+ratrob_mean = mean(table2$ratrob)
+ratrob_sd = sd(table2$ratrob)
+ratrob_max = max(table2$ratrob)
+ratrob_min = min(table2$ratrob)
+
+rataut_mean = mean(table2$rataut)
+rataut_sd = sd(table2$rataut)
+rataut_max = max(table2$rataut)
+rataut_min = min(table2$rataut)
+
+ratbur_mean = mean(table2$ratbur)
+ratbur_sd = sd(table2$ratbur)
+ratbur_max = max(table2$ratbur)
+ratbur_min = min(table2$ratbur)
+
+ratlar_mean = mean(table2$ratlar)
+ratlar_sd = sd(table2$ratlar)
+ratlar_max = max(table2$ratlar)
+ratlar_min = min(table2$ratlar)
+
+df1 = data.frame(
+  Crime_Type = c("Violent Crime", "Property Crime", "Murder", "Rape", "Aggravated Assault", "Robbery","Auto Theft", "Burglary", "Larceny"),
+  Mean = round(c(ratvio_mean, ratpro_mean, ratmur_mean, ratrap_mean, rataga_mean, ratrob_mean, rataut_mean, ratbur_mean, ratlar_mean),2),
+  SD = round(c(ratvio_sd, ratpro_sd, ratmur_sd, ratrap_sd, rataga_sd, ratrob_sd, rataut_sd, ratbur_sd, ratlar_sd),2),
+  Max = round(c(ratvio_max, ratpro_max, ratmur_max, ratrap_max, rataga_max, ratrob_max, rataut_max, ratbur_max, ratlar_max),2),
+  Min = round(c(ratvio_min, ratpro_min, ratmur_min, ratrap_min, rataga_min, ratrob_min, rataut_min, ratbur_min, ratlar_min),2)
+) 
+
+df1 = df1 %>%
+  kbl(caption = "Summary of crime rate statistics categorized by the type of crime") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+df1
+
+
+#table3
+table3 = crime %>%
+  select(state, year, aovio, aopro, aomur, aorap, aoaga, aorob, aoaut, aobur, aolar) %>%
+  filter(year >= 1977 & year <= 1992) %>%
+  na.omit()
+
+aovio_mean = mean(table3$aovio)
+aovio_sd = sd(table3$aovio)
+aovio_max = max(table3$aovio)
+aovio_min = min(table3$aovio)
+
+aopro_mean = mean(table3$aopro)
+aopro_sd = sd(table3$aopro)
+aopro_max = max(table3$aopro)
+aopro_min = min(table3$aopro)
+
+aomur_mean = mean(table3$aomur)
+aomur_sd = sd(table3$aomur)
+aomur_max = max(table3$aomur)
+aomur_min = min(table3$aomur)
+
+aorap_mean = mean(table3$aorap)
+aorap_sd = sd(table3$aorap)
+aorap_max = max(table3$aorap)
+aorap_min = min(table3$aorap)
+
+aoaga_mean = mean(table3$aoaga)
+aoaga_sd = sd(table3$aoaga)
+aoaga_max = max(table3$aoaga)
+aoaga_min = min(table3$aoaga)
+
+aorob_mean = mean(table3$aorob)
+aorob_sd = sd(table3$aorob)
+aorob_max = max(table3$aorob)
+aorob_min = min(table3$aorob)
+
+aoaut_mean = mean(table3$aoaut)
+aoaut_sd = sd(table3$aoaut)
+aoaut_max = max(table3$aoaut)
+aoaut_min = min(table3$aoaut)
+
+aobur_mean = mean(table3$aobur)
+aobur_sd = sd(table3$aobur)
+aobur_max = max(table3$aobur)
+aobur_min = min(table3$aobur)
+
+aolar_mean = mean(table3$aolar)
+aolar_sd = sd(table3$aolar)
+aolar_max = max(table3$aolar)
+aolar_min = min(table3$aolar)
+
+df2 = data.frame(
+  Crime_Type = c("Violent Crime", "Property Crime", "Murder", "Rape", "Aggravated Assault", "Robbery","Auto Theft", "Burglary", "Larceny"),
+  Mean = round(c(aovio_mean, aopro_mean, aomur_mean, aorap_mean, aoaga_mean, aorob_mean, aoaut_mean, aobur_mean, aolar_mean),2),
+  SD = round(c(aovio_sd, aopro_sd, aomur_sd, aorap_sd, aoaga_sd, aorob_sd, aoaut_sd, aobur_sd, aolar_sd),2),
+  Max = round(c(aovio_max, aopro_max, aomur_max, aorap_max, aoaga_max, aorob_max, aoaut_max, aobur_max, aolar_max),2),
+  Min = round(c(aovio_min, aopro_min, aomur_min, aorap_min, aoaga_min, aorob_min, aoaut_min, aobur_min, aolar_min),2)
+) 
+
+df2 = df2 %>%
+  kbl(caption = "Summary of no of arrests statistics categorized by the type of crime") %>%
+  kable_classic(full_width = F, html_font = "Cambria") 
+df2
+
+
+#plot1
+plot1 = crime %>%
+  select(year, vio, prop, murder, rape, assault, rob, auto, burg, larc) %>%
+  na.omit()
+plot1 = plot1 %>%
+  mutate(total_crime = rowSums(across(where(is.numeric))))
+plot1 = plot1 %>%
+  select(year, total_crime) %>%
+  group_by(year) %>%
+  summarise(total = sum(total_crime))
+ggplot(plot1) +
+  geom_line(aes(x=year,y=total))+
+  labs(xlab = "Year",
+       ylab = "Total number of crime cases",
+       title = "Total crime over the years")
+
+```
+
+## Differenet model estimations: TWFE, BACON, CALLAWAY AND SANTANNA
+
+We begin with TWFE estimation which is in fact the regression methodology used in the original paper. Given the staggered natur of the policy implementation, TWFE would be a go-to option here. log of crime rate is the dependent variable to enhance interpretation and scale. We do this regression for all 9 categories of crime. We then move to Bacon decomposition and instantly notice how it led to better results to due much more effective weighting. We have two groups that form into sepearate 2*2 matrix - Earlier vs Later Treated and Later vs Earlier Treated. For purpose of this paper we perform bacon decomposition without controls. We notice here that 2nd matrice is weighted much more highly than the 1st ma trice. Now this is where the TWFE would have given us equal weightage for more and therefore can be misleading. Next we move to estimating group effects useing callaway and santanna. A group here would be a state. Treatment for all the 4 approaches is defined as 1 when of the law is implemented if not 0. Callaway and Santanna method gives higher standard errors but the direction of ATT are more or less the same as TWFE and bacone except for a few. Given the non-parametric nature of this estimatior the interpretation of coefficiants is tricky. 
+
+```{r, results='hide'}
+state_crime = read.csv("D:/UT/Causal Inference/Lott n Mustard/UpdatedStateLevelData-2010.csv")
+
+state_crime = state_crime %>% 
+  filter(year >= 1977 & year <= 1992) %>% 
+  group_by(state) %>% 
+  mutate(treatment = max(shalll))
+
+maxyear =  max(state_crime$year)
+
+treatment_table = state_crime %>% 
+  group_by(state) %>% 
+  summarize(count = sum(shalll)) %>% 
+  mutate(treatment_year = ifelse(count > 0, maxyear + 1 - count, 0))
+
+state_treatment = merge(treatment_table, state_crime,  by = "state")
+
+
+outcomes = c("lvio", "lpro", "lmur", "lrap", "laga", "lrob", "lbur", "llar", "laut")
+acontrols = c("aovio", "aopro", "aomur", "aorap", "aoaga", "aorob", "aobur", "aolar", "aoaut")
+Y = length(outcomes)
+
+foreach(y = 1:Y) %do% {
+  yval = outcomes[y]
+  acon = acontrols[y]
+  fixed = "| state + year"
+  
+  twfe_spec = as.formula(paste0(yval, " ~ shalll + density + 
+                               rpcpi + rpcim + rpcui + rpcrpo + 
+                               ppwm1019 + ppwm2029 + ppwm3039 + 
+                               ppwm4049 + ppwm5064 + ppwf1019 + 
+                               ppwf2029 + ppwf3039 + ppwf4049 + 
+                               ppwf5064 + ppbm1019 + ppbm2029 + 
+                               ppbm3039 + ppbm4049 + ppbm5064 + 
+                               ppbf1019 + ppbf2029 + ppbf3039 + 
+                               ppbf4049 + ppbf5064 +ppnm1019 + 
+                               ppnm2029 + ppnm3039 + ppnm4049 + 
+                               ppnm5064 + ppnf1019 + ppnf1019 + 
+                               ppnf2029 + ppnf3039 + ppnf4049 + 
+                               ppnf5064 + ", acon, fixed))
+  
+  twfe_model =  feols(fml = twfe_spec, 
+                       data = state_treatment)
+
+  mod_name = paste("twfe", yval, sep = "_")
+  assign(mod_name, twfe_model)
+  
+  fname_mod = paste0(mod_name, ".RDs")
+  save(file = file.path("D:/UT/Causal Inference/Lott n Mustard/output/models", fname_mod), list = "twfe_model")
+}
+
+
+# bacon decomposition
+foreach(y = 1:Y) %do% {
+  yval = outcomes[y]
+  
+  bacon_formula = as.formula(paste(yval, "shalll", sep = " ~ "))
+  
+  bacon_decomp = bacon(bacon_formula, 
+                       data = state_treatment, 
+                       id_var = "fipsstat", 
+                       time_var = "year") %>%
+    group_by(type) %>% 
+    summarise(avg_est = weighted.mean(estimate, weight), 
+              weight = sum(weight))
+  
+
+  bacon_name = paste("bacon", yval, sep = "_")
+  assign(bacon_name, bacon_decomp)
+  
+  fname_mod = paste0(bacon_name, ".RDs")
+  save(file = file.path("D:/UT/Causal Inference/Lott n Mustard/output/models", fname_mod), list = "bacon_decomp")
+}
+
+# calloway santana
+foreach(y = 1:Y) %do% {
+  yval = outcomes[y]
+  x = acontrols[y]
+  
+  rhs = as.formula(paste('~ + ', x))
+  atts = att_gt(yname = yval, # LHS variable
+                 tname = 'year', # panel time variable
+                 idname = 'fipsstat', # firms' panel id variable
+                 gname = 'treatment_year', 
+                 data = state_treatment, # data
+                 xformla = rhs,
+                 est_method = "dr",
+                 control_group = "notyettreated",
+                 bstrap = TRUE, # if TRUE compute bootstrapped SE
+                 biters = 1000, # number of bootstrap iterations
+                 print_details = FALSE, # if TRUE, print detailed results
+                 clustervars = 'fipsstat', # cluster level
+                 panel = TRUE)
+  
+  cs_model = aggte(atts, type = "group", balance_e = TRUE, na.rm = TRUE)
+  
+  cs_name = paste("CS", yval, sep = "_")
+  assign(cs_name, cs_model)
+  
+  fname_mod = paste0(cs_name, ".RDs")
+  save(file = file.path("D:/UT/Causal Inference/Lott n Mustard/output/models", fname_mod), list = "cs_model")
+}
+
+# sun and abraham
+foreach(y = 1:Y) %do% {
+  yval = outcomes[y]
+  acon = acontrols[y]
+  
+  twfe_spec = as.formula(paste0(yval, "~ sunab(treatment_year, year) + density + 
+                               rpcpi + rpcim + rpcui + rpcrpo + 
+                               ppwm1019 + ppwm2029 + ppwm3039 + 
+                               ppwm4049 + ppwm5064 + ppwf1019 + 
+                               ppwf2029 + ppwf3039 + ppwf4049 + 
+                               ppwf5064 + ppbm1019 + ppbm2029 + 
+                               ppbm3039 + ppbm4049 + ppbm5064 + 
+                               ppbf1019 + ppbf2029 + ppbf3039 + 
+                               ppbf4049 + ppbf5064 +ppnm1019 + 
+                               ppnm2029 + ppnm3039 + ppnm4049 + 
+                               ppnm5064 + ppnf1019 + ppnf1019 + 
+                               ppnf2029 + ppnf3039 + ppnf4049 + 
+                               ppnf5064 + ", acon))
+  SA_mod = feols(fml = twfe_spec, 
+                  data = state_treatment,
+                  subset = ~ year < 1992,
+                  vcov = ~ fipsstat + year)
+  
+  sa_name = paste("SA", yval, sep = "_")
+  assign(sa_name, SA_mod)
+  
+  fname_mod = paste0(sa_name, ".RDs")
+  save(file = file.path("D:/UT/Causal Inference/Lott n Mustard/output/models", fname_mod), list = "SA_mod")
+}
+```
+
+```{r, results='hide'}
+outcomes = c("lvio", "lpro", "lmur", "lrap", "laga", "lrob", "lbur", "llar", "laut")
+acontrols = c("aovio", "aopro", "aomur", "aorap", "aoaga", "aorob", "aobur", "aolar", "aoaut")
+Y = length(outcomes)
+
+effects = foreach(y = 1:Y, .combine = rbind) %do% {
+  yval = outcomes[y]
+  
+  twfe_name = paste("twfe", yval, sep = "_")
+  fname_twfe = paste0(twfe_name, ".RDs")
+  
+  cs_name = paste("CS", yval, sep = "_")
+  fname_cs = paste0(cs_name, ".RDs")
+  
+  sa_name = paste("SA", yval, sep = "_")
+  fname_sa = paste0(sa_name, ".RDs")
+  
+  load(file.path("D:/UT/Causal Inference/Lott n Mustard/output/models", fname_twfe))
+  load(file.path("D:/UT/Causal Inference/Lott n Mustard/output/models", fname_cs))
+  load(file.path("D:/UT/Causal Inference/Lott n Mustard/output/models", fname_sa))
+  
+  estimates = c(yval, twfe_model[["coefficients"]][["shalll"]], cs_model[["overall.att"]])
+  se = c(yval, twfe_model[["se"]][["shalll"]], cs_model[["overall.se"]])
+  p = c(yval, twfe_model[["coeftable"]][["Pr(>|t|)"]][1], cs_model[["overall.se"]])
+  
+  rbind(estimates, se)
+} %>% 
+  as.data.frame()
+
+L = length(effects$V1)
+colnames(effects) = c("outcome", "TWFE", "CallowaySantAnna")
+rownames(effects) = NULL
+effects$TWFE = round(as.numeric(effects$TWFE), 3)
+effects$CallowaySantAnna = round(as.numeric(effects$CallowaySantAnna), 3)
+effects$TWFE = as.character(effects$TWFE)
+effects$CallowaySantAnna = as.character(effects$CallowaySantAnna)
+
+effects = effects %>% 
+  mutate(outcome = ifelse(row_number()%%2 == 0, "", outcomes)) %>% 
+  mutate(TWFE = ifelse(row_number()%%2 == 0, paste0("(", TWFE, ")"), TWFE), 
+         CallowaySantAnna = ifelse(row_number()%%2 == 0, paste0("(", CallowaySantAnna, ")"), CallowaySantAnna))
+```
+
+```{r}
+effects %>%
+  kbl(caption = "Effects") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
+
+```
+
+
+```{r, results='hide'}
+Y = length(outcomes)
+bacontab = foreach(y = 1:Y, .combine = rbind) %do% {
+  yval = outcomes[y]
+  
+  bacon_name = paste("bacon", yval, sep="_")
+  fname_bacon = paste0(bacon_name, ".RDs")
+  
+  load(file.path("D:/UT/Causal Inference/Lott n Mustard/output/models", fname_bacon))
+  
+  estimates1 = c(yval, bacon_decomp[1,])
+  estimates3 = c(yval, bacon_decomp[3,])
+  
+  rbind(estimates1, estimates3)
+} %>% 
+  data.frame()
+colnames(bacontab) = c("Crime Variable", "Type", "Average Estimate", "Weight")
+rownames(bacontab) = NULL
+```
+
+```{r}
+bacontab %>%
+  kbl(caption = "Bacon Decomposition Estimates") %>%
+  kable_classic(full_width = F, html_font = "Cambria") 
+
+```
+
+## Sun and Abraham
+
+Here we look at all the crime classes and plot their 95% confidence interval The study the heterogeneous effect by studying the lead and lags. Post treatment effects of all the crimes are more or less following the same trend which is a good learning and therefore we can say that using gthe leads and the lags the parallel trend scan be overlayed with relief. 
+
+```{r, results='hide'}
+state_crime = read_csv("D:/UT/Causal Inference/Lott n Mustard/UpdatedStateLevelData-2010.csv")
+
+state_crime = state_crime %>% 
+  filter(year>=1977 & year<=1992)
+
+state_crime = state_crime %>%
+  select(shalll, everything())
+
+state_crime = state_crime %>% 
+  group_by(state) %>% 
+  mutate(treat = ifelse(min(shalll) ==  1, 1, (ifelse(min(shalll) == max(shalll), 0, 1))))
+
+state_crime = state_crime %>%
+  select(treat, everything())
+
+treat_table = state_crime %>% 
+  group_by(state) %>% 
+  summarize(cnt = sum(shalll)) %>% 
+  na.omit()
+
+state_crime = left_join(state_crime, treat_table, by = c("state" = "state")) 
+
+state_crime = state_crime %>%
+  select(cnt, everything())
+
+state_crime = state_crime %>% 
+  mutate(treat_year = ifelse(cnt <= 16 & cnt > 0, 1992 - (cnt - 1), 0)) 
+
+state_crime = state_crime %>% 
+  mutate(time_to_treat = ifelse(treat_year == 0, 0,year - treat_year))
+
+state_crime = state_crime %>%
+  select(time_to_treat, everything())
+
+state_crime = state_crime %>%
+  select(year, everything()) %>% 
+  select(aftr, everything()) %>% 
+  select(shalll, everything()) %>% 
+  select(treat, everything()) %>% 
+  select(time_to_treat, everything())
+
+sapply(state_crime, function(x) sum(is.na(x)))
+
+mod_twfe = feols(lvio ~ shalll + aovio +  density + rpcpi + rpcim + rpcui + rpcrpo + ppwm1019 + ppwm2029 + ppwm3039 + ppwm4049 + ppwm5064 + ppwf1019 + ppwf2029 + ppwf3039 + ppwf4049 + ppwf5064 + ppbm1019 + ppbm2029 + ppbm3039 + ppbm4049 + ppbm5064 + ppbf1019 + ppbf2029 + ppbf3039 + ppbf4049 + ppbf5064 +ppnm1019 + ppnm2029 + ppnm3039 + ppnm4049 + ppnm5064 + ppnf1019 + ppnf1019 + ppnf2029 + ppnf3039 + ppnf4049 + ppnf5064 | state + year, state_crime)
+
+
+#bacon decomp
+
+mod_bacon = bacon(lvio ~ shalll, 
+                  data = state_crime, 
+                  id_var = "fipsstat", 
+                  time_var = "year")
+
+#calloway santana
+
+atts = att_gt(yname = "lvio", # LHS variable
+               tname = "year", # time variable
+               idname = "fipsstat", # id variable
+               gname = "treat_year", # first treatment period variable
+               data = state_crime, # data
+               xformla = NULL, # no covariates
+               est_method = "dr", # "dr" is doubly robust. "ipw" is inverse probability weighting. "reg" is regression
+               control_group = "notyettreated", # set the comparison group which is either "nevertreated" or "notyettreated" 
+               bstrap = TRUE, # if TRUE compute bootstrapped SE
+               biters = 1000, # number of bootstrap iterations
+               print_details = FALSE, # if TRUE, print detailed results
+               clustervars = "fipsstat", # cluster level
+               panel = TRUE) # whether the data is panel or repeated cross-sectional
+
+
+#average treatment effects overt years for avg treatment effect
+
+agg_effects = aggte(atts, type = "group", balance_e=TRUE)
+
+
+#sun and abraham
+
+agg_effects = aggte(atts, type = 'group', balance_e = T)
+
+mod_sa = feols(lvio ~ sunab(treat_year, year) + aovio +  density + rpcpi + rpcim + rpcui + rpcrpo + ppwm1019 + ppwm2029 + ppwm3039 + ppwm4049 + ppwm5064 + ppwf1019 + ppwf2029 + ppwf3039 + ppwf4049 + ppwf5064 + ppbm1019 + ppbm2029 + ppbm3039 + ppbm4049 + ppbm5064 + ppbf1019 + ppbf2029 + ppbf3039 + ppbf4049 + ppbf5064 +ppnm1019 + ppnm2029 + ppnm3039 + ppnm4049 + ppnm5064 + ppnf1019 + ppnf1019 + ppnf2029 + ppnf3039 + ppnf4049 + ppnf5064 | fipsstat + year,
+               data = state_crime,
+               vcov = ~ fipsstat + year)
+```
+
+```{r}
+
+iplot(mod_sa, sep = 0.5, ref.line = -1,
+      xlab = 'Time to treatment',
+      main = 'Event study: Staggered treatment')
+legend("bottomleft", col = c(1, 2), pch = c(20, 17), 
+       legend = "Sun & Abraham (2020)")
+```
+
+```{r, results='hide'}
+
+foreach(y = 1:Y) %do% {
+  # index outcome
+  yval = outcomes[y]
+  acon = acontrols[y]
+  
+  # formula for index outcome
+  sa_spec = as.formula(paste0(yval, "~ sunab(treat_year, year) + density + 
+                             rpcpi + rpcim + rpcui + rpcrpo + 
+                             ppwm1019 + ppwm2029 + ppwm3039 + 
+                             ppwm4049 + ppwm5064 + ppwf1019 + 
+                             ppwf2029 + ppwf3039 + ppwf4049 + 
+                             ppwf5064 + ppbm1019 + ppbm2029 + 
+                             ppbm3039 + ppbm4049 + ppbm5064 + 
+                             ppbf1019 + ppbf2029 + ppbf3039 + 
+                             ppbf4049 + ppbf5064 +ppnm1019 + 
+                             ppnm2029 + ppnm3039 + ppnm4049 + 
+                             ppnm5064 + ppnf1019 + ppnf1019 + 
+                             ppnf2029 + ppnf3039 + ppnf4049 + 
+                             ppnf5064 + ", acon))
+  # twfe model spec using formula
+  mod_SA = feols(fml = sa_spec, 
+                  data = state_crime,
+                  subset = ~ year < 1992,
+                  vcov = ~ fipsstat + year)
+  
+  # assign model name according to index outcome
+  
+  mod_name = paste("SA", yval, sep = "_")
+  assign(mod_name, mod_SA)
+  
+  fname_mod = paste0(mod_name, ".RDs")
+  save(file = file.path("D:/UT/Causal Inference/Lott n Mustard/output/models", fname_mod))
+  
+}
+```
+
+```{r, figures-side, fig.show="hold", out.width="50%"}
+
+par(mfrow=c(1,1))
+iplot(SA_lvio,sep =.5,ref.line = -1,
+      xlab = 'Time to treatment',
+      main = 'Event study: Staggered treatment',
+      sub = "Violent Crime")
+par(mfrow=c(1,1))
+iplot(SA_lpro,sep =.5,ref.line = -1,
+      xlab = 'Time to treatment',
+      main = 'Event study: Staggered treatment',
+      sub = "Property Crime")
+iplot(SA_lmur,sep =.5,ref.line = -1,
+      xlab = 'Time to treatment',
+      main = 'Event study: Staggered treatment',
+      sub = "Murder")
+par(mfrow=c(1,1))
+iplot(SA_lrap,sep =.5,ref.line = -1,
+      xlab = 'Time to treatment',
+      main = 'Event study: Staggered treatment',
+      sub = "Rape")
+iplot(SA_laga,sep =.5,ref.line = -1,
+      xlab = 'Time to treatment',
+      main = 'Event study: Staggered treatment',
+      sub = "Aggravated Assault")
+par(mfrow=c(1,1))
+iplot(SA_lrob,sep =.5,ref.line = -1,
+      xlab = 'Time to treatment',
+      main = 'Event study: Staggered treatment',
+      sub = "Robbery")
+iplot(SA_lbur,sep =.5,ref.line = -1,
+      xlab = 'Time to treatment',
+      main = 'Event study: Staggered treatment',
+      sub = "Burglary")
+par(mfrow=c(1,1))
+iplot(SA_llar,sep =.5,ref.line = -1,
+      xlab = 'Time to treatment',
+      main = 'Event study: Staggered treatment',
+      sub = "Larceny")
+iplot(SA_laut,sep =.5,ref.line = -1,
+      xlab = 'Time to treatment',
+      main = 'Event study: Staggered treatment',
+      sub = "Auto Theft")
+```
+
+## Conclusion 
+
+Overall the techniques suggest the same conslusion that derived by Lott and Mustard in their original paper however the magnitudes are different and rightfully so.These improvements are very crucial in policymaking. This also goes to say that the field of economics is constantly updating and upgrading. Therefore, it might be a good practice to revisit the old conlusions drawn in papers written before especially whe the topic is still relevant. For example callaway and santana show opposit impact on property crime rate than TWFE and Bacon. So this needs hard thingking as to which one to be followed and more importantly why the difference has risen. 
